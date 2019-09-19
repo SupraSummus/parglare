@@ -1068,7 +1068,7 @@ class Grammar(PGFile):
     @staticmethod
     def from_struct(productions_dict, terminals_dict, start, **kwargs):
         """Make parglare Grammar object from plain description dicts.
-         * productions_dict is a dictionary mapping nonterminal names into list of alternative productions equences
+         * productions_dict is a dictionary mapping nonterminal names into list of alternative productions sequences
          * terminals_dict is a dictionary mapping terminal names into their definition
         Example. A grammar for strings containg a, b and c multiple times:
         Grammar.from_struct(
