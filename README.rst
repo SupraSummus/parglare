@@ -1,3 +1,5 @@
+This is a work-in-progress-fork of igordejanovic/parglare intended to be more minimalistic.
+
 .. image:: https://raw.githubusercontent.com/igordejanovic/parglare/master/docs/images/parglare-logo.png
 
 |build-status| |coverage| |docs| |status| |license| |python-versions|
@@ -95,8 +97,8 @@ Initial layout/content of this package was created with `Cookiecutter
 `audreyr/cookiecutter-pypackage <https://github.com/audreyr/cookiecutter-pypackage>`_ project template.
 
 
-.. |build-status| image:: https://travis-ci.org/igordejanovic/parglare.svg?branch=master
-   :target: https://travis-ci.org/igordejanovic/parglare
+.. |build-status| image:: https://travis-ci.com/SupraSummus/parglare-slim.svg?branch=master
+   :target: https://travis-ci.com/SupraSummus/parglare-slim
 
 .. |coverage| image:: https://coveralls.io/repos/github/igordejanovic/parglare/badge.svg?branch=master
    :target: https://coveralls.io/github/igordejanovic/parglare?branch=master
@@ -104,9 +106,9 @@ Initial layout/content of this package was created with `Cookiecutter
 .. |docs| image:: https://img.shields.io/badge/docs-latest-green.svg
    :target: http://igordejanovic.net/parglare/latest/
 
-.. |status| image:: https://img.shields.io/pypi/status/parglare.svg
+.. |status| image:: https://img.shields.io/pypi/status/parglare-slim.svg
 
 .. |license| image:: https://img.shields.io/badge/License-MIT-blue.svg
    :target: https://opensource.org/licenses/MIT
 
-.. |python-versions| image:: https://img.shields.io/pypi/pyversions/parglare.svg
+.. |python-versions| image:: https://img.shields.io/pypi/pyversions/parglare-slim.svg
