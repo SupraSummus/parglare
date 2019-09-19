@@ -2,9 +2,9 @@ This is a work-in-progress-fork of igordejanovic/parglare intended to be more mi
 
 TODO:
  * remove grammar language - replace with native python's structures
- * remove six
  * drop support for python 3.4
  * remove implicit table caching
+ * sort out strange metaclass ParglareMetaClass
 
 .. image:: https://raw.githubusercontent.com/igordejanovic/parglare/master/docs/images/parglare-logo.png
 

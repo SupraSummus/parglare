@@ -5,7 +5,6 @@ import sys
 import re
 import itertools
 from copy import copy
-from parglare.six import add_metaclass
 from parglare.exceptions import GrammarError, ParserInitError
 from parglare.actions import pass_single, pass_none, collect, collect_sep
 from parglare.common import Location, load_python_module
@@ -1620,8 +1619,7 @@ def act_production_rule(context, nodes):
             def __repr__(cls):
                 return '<parglare:{} class at {}>'.format(name, id(cls))
 
-        @add_metaclass(ParglareMetaClass)
-        class ParglareClass(object):
+        class ParglareClass(metaclass=ParglareMetaClass):
             """Dynamically created class. Each parglare rule that uses named
             matches by default uses this action that will create Python object
             of this class.
