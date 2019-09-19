@@ -52,7 +52,7 @@ setup(
                  'parglare'},
     include_package_data=True,
     setup_requires=['pytest-runner'],
-    install_requires=['click'],
+    install_requires=[],
     tests_require=[
         'memory_profiler',
         'ply',
@@ -62,11 +62,6 @@ setup(
     license="MIT license",
     zip_safe=False,
     keywords='parglare',
-    entry_points={
-        'console_scripts': [
-            'pglr = parglare.cli:pglr'
-        ]
-    },
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

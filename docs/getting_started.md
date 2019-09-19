@@ -22,12 +22,6 @@ grammar = Grammar.from_file(file_name)
 If there is no errors in the grammar you now have the grammar instance. For more
 information see the [section about `Grammar` class](./grammar.md).
 
-
-!!! tip
-
-    There is also a handy [pglr command line tool](./pglr.md) that can be
-    used for grammar checking, visualization and debugging.
-
 The next step is to create an instance of the parser. There are two options. If
 you want to use LR parser instantiate `Parser` class. For GLR instantiate
 `GLRParser` class.
@@ -52,8 +46,7 @@ You can provide additional [parser parameters](./parser.md) during instantiation
     LR parser is faster as the GLR machinery brings a significant overhead. So,
     the general advice is to stick to the LR parsing until you are sure that you
     need additional power of GLR, i.e. either you need more than one token of
-    lookahead or your language is inherently ambiguous. pglr tool will help you in
-    investigating why you have LR conflicts in your grammar and there are some
+    lookahead or your language is inherently ambiguous. there are some
     nice [disambiguation features](./lr_parsing.md#resolving-conflicts) in parglare
     that will help you resolve some of those conflicts.
 

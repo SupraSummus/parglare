@@ -50,12 +50,6 @@ reduction will advace PDA to some other state again. Each shift/reduce operation
 change state so I'll not repeat that anymore.
 
 
-!!! tip
-
-    See [pglr command](./pglr.md) which can be used to visualize PDA. Try to
-    visualize automata for this grammar.
-
-
 After reduction parser will do shift of `+` token. There is nothing to reduce as
 the sub-expression on stack is `E +` which can't be reduced as it's not complete.
 So, the only thing we can do is to shift `2` token.
@@ -86,7 +80,7 @@ the stack). We will have the following result:
 From the point of view of arithmetic priorities, preferred solution is the last
 one but the parser don't know arithmetic rules.
 
-If you analyze this grammar using [pglr command](./pglr.md) you will see that
+If you analyze this grammar you will see that
 the LR tables have Shift/Reduce conflicts as there is a state in which parser
 can't decide whether to shift or to reduce (we just saw that situation).
 
@@ -105,11 +99,7 @@ possibilities.
 
 ## Resolving conflicts
 
-When we run:
-
-    $ pglr compile expr.pg
-
-where in `expr.pg` we have the above grammar, we get the following output at the
+When we compile the above grammar, we get the following output at the
 end:
 
     *** S/R conflicts ***

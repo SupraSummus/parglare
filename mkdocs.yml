@@ -24,7 +24,6 @@ nav:
   - Disambiguation: disambiguation.md
   - Parse trees: parse_trees.md
   - Handling errors: handling_errors.md
-  - pglr command: pglr.md
   - Debugging: debugging.md
 - About:
   - Contributing: about/CONTRIBUTING.md

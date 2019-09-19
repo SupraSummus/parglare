@@ -42,7 +42,7 @@ A pure Python LR/GLR parser.
 * [**Tracing/debugging, visualization and error reporting**](./debugging.md)
 
     There is an extensive support for grammar checking, debugging, automata
-    visualization, and parse tracing. Check out [pglr command](./pglr.md).
+    visualization, and parse tracing.
 
 * **Parsing an arbitrary list of objects**
 
@@ -192,8 +192,7 @@ print("Result = ", result)
     not proven, this should enable handling of all LR(1) grammars with reduced set
     of states and without conflicts. For grammars that are not LR(1) a GLR parsing
     is provided. If a grammar is loaded from file, its table will be peristed
-    between runs in `.pgt` file. To generate `.pgt` file explicitelly use [pglr
-    compile](./pglr.md#compiling-the-grammar) command.
+    between runs in `.pgt` file.
 
 
 ## What does `parglare` mean?
