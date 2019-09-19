@@ -54,9 +54,6 @@ setup(
     setup_requires=['pytest-runner'],
     install_requires=['click'],
     tests_require=[
-        'flake8',
-        'coverage',
-        'coveralls',
         'pytest',
     ],
     test_suite='tests',
