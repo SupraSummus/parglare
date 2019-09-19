@@ -1,27 +1,14 @@
-import sys
-import click
-
-if sys.version < '3':
-    text = unicode  # NOQA
-else:
-    text = str
-
-colors = False
-
 S_ATTENTION = {'fg': 'red', 'bold': True}
 S_HEADER = {'fg': 'green'}
 S_EMPH = {'fg': 'yellow'}
 
 
 def prints(message, s={}):
-    click.echo(style(message, s), color=colors)
+    print(style(message, s))
 
 
 def style_message(message, style):
-    if colors:
-        return click.style(message, **style)
-    else:
-        return message
+    return message
 
 
 def s_header(message):
@@ -41,14 +28,14 @@ def style(header, content, level=0, new_line=False, header_style=S_HEADER,
     if content:
         content_start = level * 8 + len(header) + 1
         content_width = width - content_start
-        content = text(content)
+        content = str(content)
         content = [content[start:start+content_width]
                    for start in range(0, len(content), content_width)]
         content = ('\n' + ' ' * content_start).join(content)
     new_line = "\n" if new_line else ""
     level = ("\t" * level) if level else ""
-    return new_line + level + style_message(text(header), header_style) \
-        + ((" " + text(content)) if content else "")
+    return new_line + level + style_message(str(header), header_style) \
+        + ((" " + str(content)) if content else "")
 
 
 def styled_print(header, content, level=0, new_line=False,
