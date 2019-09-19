@@ -54,6 +54,8 @@ setup(
     setup_requires=['pytest-runner'],
     install_requires=['click'],
     tests_require=[
+        'memory_profiler',
+        'ply',
         'pytest',
     ],
     test_suite='tests',
