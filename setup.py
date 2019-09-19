@@ -51,10 +51,10 @@ setup(
     package_dir={'parglare':
                  'parglare'},
     include_package_data=True,
+    setup_requires=['pytest-runner'],
     install_requires=['click'],
     tests_require=[
         'flake8',
-        'tox',
         'coverage',
         'coveralls',
         'pytest',
@@ -78,8 +78,6 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
-        "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',

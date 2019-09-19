@@ -1,4 +1,4 @@
-.PHONY: clean clean-test clean-pyc clean-build docs help lint
+.PHONY: clean clean-test clean-pyc clean-build docs help
 .DEFAULT_GOAL := help
 define BROWSER_PYSCRIPT
 import os, webbrowser, sys
@@ -43,19 +43,8 @@ clean-pyc: ## remove Python file artifacts
 	find . -name '__pycache__' -exec rm -fr {} +
 
 clean-test: ## remove test and coverage artifacts
-	rm -fr .tox/
 	rm -f .coverage
 	rm -fr htmlcov/
-
-lint: ## check style with flake8
-	flake8
-
-test: ## run tests quickly with the default Python
-	py.test tests/func
-
-
-test-all: ## run tests on every Python version with tox
-	tox
 
 coverage: ## check code coverage quickly with the default Python
 	coverage run --source parglare -m pytest tests/func
