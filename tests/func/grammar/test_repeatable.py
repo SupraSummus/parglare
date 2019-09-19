@@ -224,9 +224,12 @@ def test_repeatable_one_zero_rr_conflicts():
     S: A B* D;
 
     terminals
-    A:; B:; C:; D:;
+    A: "A";
+    B: "B";
+    C: "C";
+    D: "D";
     """
-    g = Grammar.from_string(grammar, _no_check_recognizers=True)
+    g = Grammar.from_string(grammar)
 
     # Check if parser construction raises exception
     try:

@@ -807,7 +807,7 @@ class Grammar(PGFile):
 
     def __init__(self, productions=None, terminals=None,
                  classes=None, imports=None, file_path=None, recognizers=None,
-                 start_symbol=None, _no_check_recognizers=False,
+                 start_symbol=None,
                  re_flags=re.MULTILINE, ignore_case=False, debug=False,
                  debug_parse=False, debug_colors=False):
         """
@@ -816,8 +816,6 @@ class Grammar(PGFile):
 
         Arguments:
         see Grammar attributes.
-        _no_check_recognizers (bool, internal): Used by pglr tool to circumvent
-             errors for empty recognizers that will be provided in user code.
         """
 
         self.imported_files = {}
@@ -829,8 +827,6 @@ class Grammar(PGFile):
                                       file_path=file_path,
                                       grammar=self,
                                       recognizers=recognizers)
-
-        self._no_check_recognizers = _no_check_recognizers
 
         # Determine start symbol. If name is provided search for it. If name is
         # not given use the first production LHS symbol as the start symbol.
@@ -865,8 +861,7 @@ class Grammar(PGFile):
         self._resolve_actions()
 
         # Connect recognizers, override grammar provided
-        if not self._no_check_recognizers:
-            self._connect_override_recognizers()
+        self._connect_override_recognizers()
 
     def _add_all_symbols_productions(self):
 
@@ -1072,10 +1067,11 @@ class Grammar(PGFile):
                        start_symbol=start_symbol)
 
     @staticmethod
-    def _parse(parse_fun_name, what_to_parse, recognizers=None,
-               ignore_case=False, re_flags=re.MULTILINE, debug=False,
-               debug_parse=False, debug_colors=False,
-               _no_check_recognizers=False):
+    def _parse(
+        parse_fun_name, what_to_parse, recognizers=None,
+        ignore_case=False, re_flags=re.MULTILINE, debug=False,
+        debug_parse=False, debug_colors=False,
+    ):
         from .parser import Context
         context = Context()
         context.extra = extra = GrammarContext()
@@ -1091,14 +1087,15 @@ class Grammar(PGFile):
         imports, productions, terminals, classes = \
             getattr(grammar_parser, parse_fun_name)(what_to_parse,
                                                     context=context)
-        g = Grammar(productions=productions,
-                    terminals=terminals,
-                    classes=classes,
-                    imports=imports,
-                    recognizers=recognizers,
-                    file_path=what_to_parse
-                    if parse_fun_name == 'parse_file' else None,
-                    _no_check_recognizers=_no_check_recognizers)
+        g = Grammar(
+            productions=productions,
+            terminals=terminals,
+            classes=classes,
+            imports=imports,
+            recognizers=recognizers,
+            file_path=what_to_parse
+            if parse_fun_name == 'parse_file' else None,
+        )
         termui.colors = debug_colors
         if debug:
             g.print_debug()

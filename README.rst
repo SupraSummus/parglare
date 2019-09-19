@@ -1,7 +1,6 @@
 This is a work-in-progress-fork of igordejanovic/parglare intended to be more minimalistic.
 
 TODO:
- * maybe remove `_no_check_recognizers`
  * remove grammar language - replace with native python's structures
  * remove six
  * drop support for python 3.4
