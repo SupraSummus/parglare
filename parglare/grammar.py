@@ -1058,12 +1058,83 @@ class Grammar(PGFile):
                 return p.prod_id
 
     @staticmethod
-    def from_struct(productions, start_symbol=None):
+    def _from_struct_old(productions, start_symbol=None):
         """Used internally to bootstrap grammar file parser."""
         productions, terminals = create_productions_terminals(productions)
         return Grammar(productions,
                        terminals=terminals,
                        start_symbol=start_symbol)
+
+    @staticmethod
+    def from_struct(productions_dict, terminals_dict, start, **kwargs):
+        """Make parglare Grammar object from plain description dicts.
+         * productions_dict is a dictionary mapping nonterminal names into list of alternative productions equences
+         * terminals_dict is a dictionary mapping terminal names into their definition
+        Example. A grammar for strings containg a, b and c multiple times:
+        Grammar.from_struct(
+            {
+                'start': [['start', 'a'], ['start', 'b_or_c'], []],
+            },
+            {
+                'a': ('string', 'a'),
+                'b_or_c': ('regexp', 'b|c'),
+            },
+            'start',
+        )
+        """
+        def make_terminal(name, t):
+            typ = t[0]
+            if typ == 'external':
+                return Terminal(name=name)
+
+            val = t[1]
+            if typ == 'string':
+                recognizer_class = StringRecognizer
+            elif typ == 'regexp':
+                recognizer_class = RegExRecognizer
+            else:
+                assert False
+            return Terminal(recognizer=recognizer_class(val), name=name)
+
+        terminals = {
+            name: make_terminal(name, value)
+            for name, value in terminals_dict.items()
+        }
+
+        non_terminals = {
+            name: NonTerminal(name)
+            for name in productions_dict.keys()
+        }
+
+        def get_symbol(name):
+            if name in terminals:
+                assert name not in non_terminals
+                return terminals[name]
+            else:
+                return non_terminals[name]
+
+        productions = []
+        for name, alternatives in productions_dict.items():
+            for alternative in alternatives:
+                symbol = non_terminals[name]
+                rhs = ProductionRHS([get_symbol(s) for s in alternative])
+                productions.append(Production(
+                    symbol,
+                    rhs,
+                ))
+
+        start_non_terminal = NonTerminal('__start')
+        productions.insert(0, Production(
+            start_non_terminal,
+            ProductionRHS([non_terminals[start], EOF]),
+        ))
+
+        return Grammar(
+            productions=productions,
+            terminals=terminals.values(),
+            start_symbol=start_non_terminal,
+            **kwargs,
+        ), '__start'
 
     @staticmethod
     def _parse(
@@ -1489,7 +1560,7 @@ def get_grammar_parser(debug, debug_colors):
     global grammar_parser
     if not grammar_parser:
         from parglare import Parser
-        grammar_parser = Parser(Grammar.from_struct(pg_productions, PGFILE),
+        grammar_parser = Parser(Grammar._from_struct_old(pg_productions, PGFILE),
                                 actions=pg_actions,
                                 debug=debug,
                                 debug_colors=debug_colors)

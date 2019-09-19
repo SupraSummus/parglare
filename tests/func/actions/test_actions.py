@@ -42,7 +42,7 @@ def test_actions():
     p = Parser(grammar, actions=get_actions())
 
     result = p.parse("""34.7+78*34 +89+
-    12.223*4""")
+    12.223*4""")[0]
 
     assert result == 34.7 + 78 * 34 + 89 + 12.223 * 4
 
@@ -60,7 +60,7 @@ def test_actions_manual():
 
     assert type(result) is NodeNonTerm
 
-    assert p.call_actions(result) == \
+    assert p.call_actions(result)[0] == \
         34.7 + 78 * 34 + 89 + 12.223 * 4
 
 
@@ -162,6 +162,6 @@ def test_action_decorator():
     p = Parser(grammar, actions=action.all)
 
     result = p.parse("""34.7+78*34 +89+
-    12.223*4""")
+    12.223*4""")[0]
 
     assert result == 34.7 + 78 * 34 + 89 + 12.223 * 4
