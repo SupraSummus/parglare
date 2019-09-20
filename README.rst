@@ -3,7 +3,13 @@ This is a work-in-progress-fork of igordejanovic/parglare intended to be more mi
 TODO:
  * remove grammar language - replace with native python's structures
  * remove implicit table caching
- * sort out strange metaclass ParglareMetaClass
+ * sort out strange metaclass `ParglareMetaClass`
+ * remove `Grammar._parse`
+ * remove `Grammar._from_struct_old`
+ * remove `parser.parse_file`
+ * remove magic LAYOUT rule (maybe replace with something less magic)
+ * remove `prefer` option on terminals
+ * remove context usable by parsing actions. propose something more robust
 
 .. image:: https://raw.githubusercontent.com/igordejanovic/parglare/master/docs/images/parglare-logo.png
 

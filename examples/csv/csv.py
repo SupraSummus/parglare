@@ -1,31 +1,40 @@
 from __future__ import unicode_literals
 from parglare import Grammar, Parser
+from parglare.actions import pass_inner, collect_sep, pass_single
 
-grammar = r"""
-@pass_inner
-CSVFile: OptionalNewLines Records OptionalNewLines;
-@collect_sep
-Records: Records OptionalNewLines Record| Record;
-@pass_single
-Record: Fields NewLine;
-@collect_sep
-Fields: Fields "," Field | Field;
-Field: QuotedField | FieldContent;
-NewLines: NewLine | NewLines NewLine;
-OptionalNewLines: NewLines | EMPTY;
-@pass_inner
-QuotedField: "\"" FieldContentQuoted "\"";
+grammar, _ = Grammar.from_struct(
+    {
+        'CSVFile': [['OptionalNewLines', 'Records', 'OptionalNewLines']],
+        'Records': [['Records', 'OptionalNewLines', 'Record'], ['Record']],
+        'Record': [['Fields', 'NewLine']],
+        'Fields': [['Fields', ',', 'Field'], ['Field']],
+        'Field': [['QuotedField'], ['FieldContent']],
+        'NewLines': [['NewLine'], ['NewLines', 'NewLine']],
+        'OptionalNewLines': [['NewLines'], []],
+        'QuotedField': [['"', 'FieldContentQuoted', '"']],
+    },
+    {
+        'FieldContent': ('regexp', r'[^,\n]+'),
+        'FieldContentQuoted': ('regexp', r'(("")|([^"]))+'),
+        'NewLine': ('string', "\n"),
+        ',': ('string', ','),
+        '"': ('string', '"'),
+    },
+    'CSVFile',
+)
 
-terminals
-FieldContent: /[^,\n]+/;
-FieldContentQuoted: /(("")|([^"]))+/;
-NewLine: "\n";
-"""
+
+actions = {
+    'CSVFile': pass_inner,
+    'Records': collect_sep,
+    'Record': pass_single,
+    'Fields': collect_sep,
+    'QuotedField': pass_inner,
+}
 
 
 def main(debug=False):
-    g = Grammar.from_string(grammar)
-    parser = Parser(g, ws='\t ', debug=debug, debug_colors=True)
+    parser = Parser(grammar, actions=actions, ws='\t ', debug=debug, debug_colors=True)
 
     input_str = """
     First, Second with multiple words, "Third, quoted with comma"
@@ -37,7 +46,7 @@ def main(debug=False):
 
     """
 
-    res = parser.parse(input_str)
+    res = parser.parse(input_str)[0]
 
     print("Input:\n", input_str)
     print("Result = ", res)

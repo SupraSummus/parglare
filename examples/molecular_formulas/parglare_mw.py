@@ -7,14 +7,6 @@ http://www.dalkescientific.com/writings/diary/archive/2007/11/03/antlr_java.html
 """
 from parglare import Grammar, Parser
 
-grammar = r"""
-mw: EMPTY | formula;
-formula: species | formula species;
-species: ATOM DIGITS | ATOM;
-
-terminals
-DIGITS: /\d+/;
-"""
 
 mw_table = {
     'H': 1.00794,
@@ -31,8 +23,18 @@ atom_names = sorted(
 # Creates a pattern like:  Cl|C|H|O|S
 atom_pattern = "|".join(atom_names)
 
-# Extend grammar definition with the ATOM rule
-grammar += '\nATOM: /{}/;'.format(atom_pattern)
+grammar, _ = Grammar.from_struct(
+    {
+        'mw': [[], ['formula']],
+        'formula': [['species'], ['formula', 'species']],
+        'species': [['ATOM', 'DIGITS'], ['ATOM']],
+    },
+    {
+        'ATOM': ('regexp', atom_pattern),
+        'DIGITS': ('regexp', r'\d+'),
+    },
+    'mw',
+)
 
 actions = {
     'mw': [lambda _, __: 0.0,

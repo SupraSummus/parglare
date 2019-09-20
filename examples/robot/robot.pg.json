@@ -1,0 +1,22 @@
+{
+    "productions_dict": {
+        "program": [["begin", "commands", "end"]],
+        "commands": [["commands", "command"], []],
+        "command": [["initial"], ["move"]],
+        "initial": [["INITIAL", "INT", ",", "INT"]],
+        "move": [["direction", "INT"], ["direction"]],
+        "LAYOUT": [["LayoutItem"], ["LAYOUT", "LayoutItem"]],
+        "LayoutItem": [["WS"], ["Comment"], []]
+    },
+    "terminals_dict": {
+        "INT": ["regexp", "\\d+"],
+        "INITIAL": ["string", "initial"],
+        "WS": ["regexp", "\\s+"],
+        "Comment": ["regexp", "\\/\\/.*"],
+        "begin": ["string", "begin"],
+        "end": ["string", "end"],
+        "direction": ["regexp", "up|down|left|right"],
+        ",": ["string", ","]
+    },
+    "start": "program"
+}

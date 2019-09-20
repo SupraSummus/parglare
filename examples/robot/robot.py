@@ -14,9 +14,12 @@ An example of the robot program:
 
 """
 from __future__ import unicode_literals, print_function
+import json
 import os
+
 from parglare import Grammar, Parser
 from parglare import get_collector
+
 
 action = get_collector()
 
@@ -27,20 +30,23 @@ def INT(_, value):
 
 
 @action
-def initial(context, nodes, x, y):
+def initial(context, nodes):
+    x = nodes[1]
+    y = nodes[3]
     print("Robot initial position set to: {}, {}".format(x, y))
     # We use context.extra to keep robot position state.
     context.extra = (x, y)
 
 
 @action
-def program(context, nodes, commands):
+def program(context, nodes):
     return context.extra
 
 
 @action
-def move(context, nodes, direction, steps):
-    steps = 1 if steps is None else steps
+def move(context, nodes):
+    direction = nodes[0]
+    steps = nodes[1] if len(nodes) >= 2 else 1
     print("Moving robot {} for {} steps.".format(direction, steps))
 
     move = {
@@ -57,9 +63,9 @@ def move(context, nodes, direction, steps):
 
 def main(debug=False):
     this_folder = os.path.dirname(__file__)
-    g = Grammar.from_file(os.path.join(this_folder, 'robot.pg'),
-                          debug=debug, debug_colors=True)
-    parser = Parser(g, actions=action.all, debug=debug,
+    with open(os.path.join(this_folder, 'robot.pg.json'), 'rt') as f:
+        grammar, _ = Grammar.from_struct(**json.load(f))
+    parser = Parser(grammar, actions=action.all, debug=debug,
                     debug_colors=True)
 
     end_position = parser.parse_file(os.path.join(this_folder, 'program.rbt'))

@@ -1083,6 +1083,10 @@ class Grammar(PGFile):
         )
         """
         def make_terminal(name, t):
+            if not isinstance(t, (tuple, list)) or len(t) != 2:
+                raise ValueError(f"{name} terminal specification has to"
+                                 "be a list or a tuple of two elements")
+
             typ = t[0]
             if typ == 'external':
                 return Terminal(name=name)
@@ -1093,13 +1097,23 @@ class Grammar(PGFile):
             elif typ == 'regexp':
                 recognizer_class = RegExRecognizer
             else:
-                assert False
+                raise ValueError(f"terminal {name}: unknown recognizer type {typ}")
             return Terminal(recognizer=recognizer_class(val), name=name)
+
+        if not isinstance(terminals_dict, dict):
+            raise ValueError("terminals_dict has to be a dict")
 
         terminals = {
             name: make_terminal(name, value)
             for name, value in terminals_dict.items()
         }
+
+        if not isinstance(productions_dict, dict):
+            raise ValueError("productions_dict has to be a dict")
+
+        for name in productions_dict.keys():
+            if name in terminals:
+                raise ValueError(f"there are both terminal and production named {name} - this is bad")
 
         non_terminals = {
             name: NonTerminal(name)
@@ -1111,15 +1125,22 @@ class Grammar(PGFile):
                 assert name not in non_terminals
                 return terminals[name]
             else:
-                return non_terminals[name]
+                return non_terminals.get(name)
 
         productions = []
         for name, alternatives in productions_dict.items():
-            for alternative in alternatives:
-                symbol = non_terminals[name]
-                rhs = ProductionRHS([get_symbol(s) for s in alternative])
+            for i, alternative in enumerate(alternatives):
+                lhs_symbol = non_terminals[name]
+                rhs_symbols = []
+                for symbol_name in alternative:
+                    symbol = get_symbol(symbol_name)
+                    if symbol is None:
+                        raise ValueError(f"production {name}, alternative {i}: "
+                                         f"reference to undefined symbol {symbol_name}")
+                    rhs_symbols.append(symbol)
+                rhs = ProductionRHS(rhs_symbols)
                 productions.append(Production(
-                    symbol,
+                    lhs_symbol,
                     rhs,
                 ))
 
@@ -1171,15 +1192,6 @@ class Grammar(PGFile):
             g.print_debug()
 
         return g
-
-    @staticmethod
-    def from_string(grammar_str, **kwargs):
-        return Grammar._parse('parse', grammar_str, **kwargs)
-
-    @staticmethod
-    def from_file(file_name, **kwargs):
-        file_name = path.realpath(file_name)
-        return Grammar._parse('parse_file', file_name, **kwargs)
 
     def print_debug(self):
         a_print("*** GRAMMAR ***", new_line=True)

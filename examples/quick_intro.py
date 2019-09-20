@@ -1,31 +1,61 @@
 from parglare import Parser, Grammar
 
-grammar = r"""
-E: E '+' E  {left, 1}
- | E '-' E  {left, 1}
- | E '*' E  {left, 2}
- | E '/' E  {left, 2}
- | E '^' E  {right, 3}
- | '(' E ')'
- | number;
-
-terminals
-number: /\d+(\.\d+)?/;
-"""
+grammar, _ = Grammar.from_struct(
+    productions_dict={
+        'E1': [
+            ['E1', '+', 'E2'],
+            ['E1', '-', 'E2'],
+            ['E2'],
+        ],
+        'E2': [
+            ['E2', '*', 'E3'],
+            ['E2', '/', 'E3'],
+            ['E3'],
+        ],
+        'E3': [
+            ['E4', '^', 'E3'],
+            ['E4'],
+        ],
+        'E4': [
+            ['(', 'E1', ')'],
+            ['number'],
+        ],
+    },
+    terminals_dict={
+        'number': ('regexp', r'\d+(\.\d+)?'),
+        '+': ('string', '+'),
+        '-': ('string', '-'),
+        '*': ('string', '*'),
+        '/': ('string', '/'),
+        '^': ('string', '^'),
+        '(': ('string', '('),
+        ')': ('string', ')'),
+    },
+    start='E1',
+)
 
 actions = {
-    "E": [lambda _, nodes: nodes[0] + nodes[2],
-          lambda _, nodes: nodes[0] - nodes[2],
-          lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: nodes[0] / nodes[2],
-          lambda _, nodes: nodes[0] ** nodes[2],
-          lambda _, nodes: nodes[1],
-          lambda _, nodes: nodes[0]],
-    "number": lambda _, value: float(value),
+    "E1": [
+        lambda _, nodes: nodes[0] + nodes[2],
+        lambda _, nodes: nodes[0] - nodes[2],
+        lambda _, nodes: nodes[0],
+    ],
+    "E2": [
+        lambda _, nodes: nodes[0] * nodes[2],
+        lambda _, nodes: nodes[0] / nodes[2],
+        lambda _, nodes: nodes[0],
+    ],
+    "E3": [
+        lambda _, nodes: nodes[0] ** nodes[2],
+        lambda _, nodes: nodes[0],
+    ],
+    "E4": [
+        lambda _, nodes: nodes[1],
+        lambda _, nodes: float(nodes[0]),
+    ],
 }
 
-g = Grammar.from_string(grammar)
-parser = Parser(g, debug=True, actions=actions)
+parser = Parser(grammar, debug=True, actions=actions)
 
 result = parser.parse("34 + 4.6 / 2 * 4^2^2 + 78")
 
