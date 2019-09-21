@@ -1,4 +1,3 @@
-import pytest  # noqa
 import os
 import tempfile
 from parglare import Grammar
@@ -7,10 +6,13 @@ from parglare.export import grammar_pda_export
 
 
 def test_dot_export():
-    grammar = 'S: S S | S S S | "b";'
-    g = Grammar.from_string(grammar)
+    grammar, _ = Grammar.from_struct(
+        {'S': [['S', 'S'], ['S', 'S', 'S'], ['b']]},
+        {'b': ('string', 'b')},
+        'S',
+    )
 
-    table = create_table(g)
+    table = create_table(grammar)
 
     tmp_dir = tempfile.mkdtemp()
     file_name = os.path.join(tmp_dir, 'testexport.dot')
