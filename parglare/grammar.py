@@ -1161,6 +1161,12 @@ class Grammar(PGFile):
                     rhs,
                 ))
 
+        if start not in non_terminals:
+            raise ValueError(f"Couldn't find start production {start}")
+
+        if '__start' in non_terminals or '__start' in terminals:
+            raise ValueError(f"'__start' symbol name is reserved and you can't use it - sorry")
+
         start_non_terminal = NonTerminal('__start')
         productions.insert(0, Production(
             start_non_terminal,

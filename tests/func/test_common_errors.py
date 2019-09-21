@@ -1,4 +1,4 @@
-import pytest  # noqa
+import pytest
 from parglare import Grammar, Parser
 from parglare.exceptions import GrammarError
 
@@ -16,39 +16,44 @@ def test_infinite_recursions():
     parser construction.
     """
 
-    grammar = """
-    Elements: Elements Element;
-    Element: "a" | "b";
-    """
-
-    g = Grammar.from_string(grammar)
+    grammar, _ = Grammar.from_struct(
+        {'Elements': [['Elements', 'Element']]},
+        {'Element': ('string', 'a')},
+        start='Elements',
+    )
 
     with pytest.raises(GrammarError) as e:
-        Parser(g)
+        Parser(grammar)
 
-    assert 'First set empty for grammar symbol "Elements"' in str(e)
-    assert 'infinite recursion' in str(e)
+        assert 'First set empty for grammar symbol "Elements"' in str(e)
+        assert 'infinite recursion' in str(e)
 
 
 def test_terminals_with_different_names():
     """Test that all terminals with same string match have the same name.
     """
 
-    # In this grammar we have 'd' terminal in S production and B terminal with
-    # the same 'd' recognizer.
-    grammar = """
-    S: 'a' A 'd' | 'b' A B;
-    A: 'c' A | 'c';
-    terminals
-    B: 'd';
-    """
-
     with pytest.raises(GrammarError) as e:
-        Grammar.from_string(grammar)
+        Grammar.from_struct(
+            # In this grammar we have 'd' terminal in S production and B terminal with
+            # the same 'd' recognizer.
+            {
+                'S': [['a', 'A', 'd'], ['b', 'A', 'B']],
+                'A': [['c', 'A'], ['c']],
+            },
+            {
+                'B': ('string', 'd'),
+                'a': ('string', 'a'),
+                'b': ('string', 'b'),
+                'c': ('string', 'c'),
+                'd': ('string', 'd'),
+            },
+            'S',
+        )
 
-    assert 'B' in str(e)
-    assert 'd' in str(e)
-    assert 'match the same string' in str(e)
+        assert 'B' in str(e)
+        assert 'd' in str(e)
+        assert 'match the same string' in str(e)
 
 
 def todo_test_grammar_without_valid_inputs():
