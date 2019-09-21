@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-import pytest  # noqa
+import pytest
 from parglare import GLRParser, Grammar, ParseError
 from parglare.parser import Token
 from parglare.actions import pass_single, pass_inner
@@ -43,8 +41,6 @@ actions = {
     ],
     start_symbol: pass_single,
 }
-
-
 
 
 def test_glr_recovery_default():

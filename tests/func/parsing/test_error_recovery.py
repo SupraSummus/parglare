@@ -1,6 +1,5 @@
-import pytest  # noqa
+import pytest
 from parglare import Parser, ParseError, Grammar
-from parglare.actions import pass_single
 
 
 grammar, _ = Grammar.from_struct(
@@ -97,7 +96,7 @@ def test_error_recovery_complete():
     In this test we start from the 'Result' rule so parglare will require
     input to end with 'EOF' for the parse to be successful.
     """
-    parser = Parser(g, actions=actions, error_recovery=True)
+    parser = Parser(grammar, actions=actions, error_recovery=True)
 
     result = parser.parse("1 + 2 + * 3 & 89 - 5")
 
@@ -128,7 +127,7 @@ def test_error_recovery_parse_error():
     error that couldn't be recovered from.
 
     """
-    parser = Parser(g, actions=actions, error_recovery=True)
+    parser = Parser(grammar, actions=actions, error_recovery=True)
 
     with pytest.raises(ParseError) as einfo:
         parser.parse("1 + 2 + * 3 + & -")
@@ -150,13 +149,13 @@ def test_custom_error_recovery():
         assert isinstance(context.parser, Parser)
         assert context.input_str == '1 + 2 + * 3 - 5'
         assert context.position == 8
-        open_par = g.get_terminal('(')
+        open_par = grammar.get_terminal('(')
         assert open_par in expected_symbols
-        number = g.get_terminal('number')
+        number = grammar.get_terminal('number')
         assert number in expected_symbols
         return None, context.position + 1
 
-    parser = Parser(g, actions=actions, error_recovery=my_recovery, debug=True)
+    parser = Parser(grammar, actions=actions, error_recovery=my_recovery, debug=True)
 
     result = parser.parse("1 + 2 + * 3 - 5")
 
@@ -174,7 +173,7 @@ def test_recovery_custom_unsuccessful():
     def custom_recovery(context, error):
         return None, None
 
-    parser = Parser(g, actions=actions, error_recovery=custom_recovery)
+    parser = Parser(grammar, actions=actions, error_recovery=custom_recovery)
 
     with pytest.raises(ParseError) as e:
         parser.parse('1 + 5 8 - 2')

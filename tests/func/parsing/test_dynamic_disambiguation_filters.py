@@ -81,7 +81,7 @@ def test_dynamic_disambiguation():
 
     # This grammar is ambiguous if no prefer_shift strategy is used.
     with pytest.raises(SRConflicts):
-        Parser(g, prefer_shifts=False)
+        Parser(grammar, prefer_shifts=False)
 
     # But if we provide dynamic disambiguation filter
     # the conflicts can be handled at run-time.

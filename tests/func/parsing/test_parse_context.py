@@ -1,12 +1,9 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-import pytest  # noqa
 from parglare import Grammar, Parser
 from parglare.parser import NodeNonTerm, Context
 from parglare.actions import pass_single
 
 
-grammar = Grammar.from_struct(
+grammar, _ = Grammar.from_struct(
     {
         'E': [
             ['E', '+', 'number'],
@@ -73,7 +70,7 @@ def test_parse_context():
     global called
     called = [False, False, False]
 
-    parser = Parser(g, actions=actions, debug=True)
+    parser = Parser(grammar, actions=actions, debug=True)
 
     parser.parse("   1 + 2  ")
 
@@ -88,7 +85,7 @@ def test_parse_context_call_actions():
     global called
     called = [False, False, False]
 
-    parser = Parser(g, build_tree=True, actions=actions, debug=True)
+    parser = Parser(grammar, build_tree=True, actions=actions, debug=True)
 
     tree = parser.parse("   1 + 2  ")
     context = Context()
