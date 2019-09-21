@@ -3,29 +3,30 @@ from parglare import GLRParser, Grammar, Parser, SHIFT, REDUCE
 from parglare.exceptions import SRConflicts
 
 
-grammar = r"""
-s: E EOF;
-E: E op_sum E {dynamic}
- | E op_mul E {dynamic}
- | number;
+grammar, _ = Grammar.from_struct(
+    {
+        'E': [
+            ['E', 'op_sum', 'E'],  # dynamic
+            ['E', 'op_mul', 'E'],  # dynamic
+            ['number'],
+        ],
+    },
+    {
+        'number': ('regexp', r'\d+'),
+        'op_sum': ('string', '+'),  # dynamic
+        'op_mul': ('string', '*'),  # dynamic
+    },
+    'E',
+)
 
-terminals
-number: /\d+/;
-op_sum: '+' {dynamic};
-op_mul: '*' {dynamic};
-"""
 instr1 = '1 + 2 * 5 + 3'
 instr2 = '1 * 2 + 5 * 3'
 
 actions = {
-    's': [lambda _, c: c[0]],
     'E': [lambda _, nodes: nodes[0] + nodes[2],
           lambda _, nodes: nodes[0] * nodes[2],
           lambda _, nodes: float(nodes[0])]
 }
-
-
-g = Grammar.from_string(grammar)
 
 
 operations = []
@@ -84,7 +85,7 @@ def test_dynamic_disambiguation():
 
     # But if we provide dynamic disambiguation filter
     # the conflicts can be handled at run-time.
-    p = Parser(g, actions=actions, prefer_shifts=False,
+    p = Parser(grammar, actions=actions, prefer_shifts=False,
                dynamic_filter=custom_disambiguation_filter)
 
     # * operation will be of higher priority as it appears later in the stream.
@@ -101,7 +102,7 @@ def test_dynamic_disambiguation_glr():
     Test disambiguation determined at run-time based on the input.
     This tests GLR parsing.
     """
-    p = GLRParser(g, actions=actions,
+    p = GLRParser(grammar, actions=actions,
                   dynamic_filter=custom_disambiguation_filter)
 
     # * operation will be of higher priority as it appears later in the stream.

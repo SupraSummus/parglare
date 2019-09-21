@@ -5,33 +5,7 @@ from parglare import GLRParser, Grammar, ParseError
 from parglare.parser import Token
 from parglare.actions import pass_single, pass_inner
 
-grammar = r"""
-Result: E EOF;
-E: E '+' E
- | E '-' E
- | E '*' E
- | E '/' E
- | E '^' E
- | '(' E ')'
- | number;
-
-terminals
-number: /\d+(\.\d+)?/;
-"""
-
-actions = {
-    "Result": pass_single,
-    "E": [lambda _, nodes: nodes[0] + nodes[2],
-          lambda _, nodes: nodes[0] - nodes[2],
-          lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: nodes[0] / nodes[2],
-          lambda _, nodes: nodes[0] ** nodes[2],
-          pass_inner,
-          pass_single],
-    "number": lambda _, value: float(value),
-}
-
-g = Grammar.from_string(grammar)
+from .test_error_recovery import grammar, actions
 
 
 def test_glr_recovery_default():

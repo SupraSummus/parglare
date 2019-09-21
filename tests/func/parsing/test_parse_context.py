@@ -6,14 +6,19 @@ from parglare.parser import NodeNonTerm, Context
 from parglare.actions import pass_single
 
 
-grammar = r"""
-Result: E EOF;
-E: E '+' E  {left}
- | number;
-
-terminals
-number: /\d+(\.\d+)?/;
-"""
+grammar = Grammar.from_struct(
+    {
+        'E': [
+            ['E', '+', 'number'],
+            ['number'],
+        ],
+    },
+    {
+        'number': ('regexp', r'\d+(\.\d+)?'),
+        '+': ('string', '+'),
+    },
+    'E',
+)
 
 called = [False, False, False]
 node_exists = [False]
@@ -62,8 +67,6 @@ actions = {
     "number": act_number,
     "EOF": act_eof
 }
-
-g = Grammar.from_string(grammar)
 
 
 def test_parse_context():

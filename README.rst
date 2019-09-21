@@ -10,6 +10,8 @@ TODO:
  * remove magic LAYOUT rule (maybe replace with something less magic)
  * remove `prefer` option on terminals
  * remove context usable by parsing actions. propose something more robust
+ * remove dynamic disambiguation mechanisms (propose something more robust?)
+ * replace error recovery and partial parse features with single "resumed parse" feature
 
 .. image:: https://raw.githubusercontent.com/igordejanovic/parglare/master/docs/images/parglare-logo.png
 
