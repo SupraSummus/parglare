@@ -464,6 +464,10 @@ class PGFile(object):
         self.recognizers = recognizers
         self.actions = {}
 
+        # default values (mutable, so shouldnt be provided in function header)
+        if self.recognizers is None:
+            self.recognizers = {}
+
         self.collect_and_unify_symbols()
 
         if self.file_path:
@@ -805,10 +809,10 @@ class Grammar(PGFile):
     """
 
     def __init__(self, productions=None, terminals=None,
-                 classes=None, imports=None, file_path=None, recognizers=None,
+                 classes=None, imports=None, file_path=None,
                  start_symbol=None,
                  re_flags=re.MULTILINE, ignore_case=False, debug=False,
-                 debug_parse=False, debug_colors=False):
+                 debug_parse=False, debug_colors=False, **kwargs):
         """
         Grammar constructor is not meant to be called directly by the user.
         See `from_str` and `from_file` static methods instead.
@@ -825,7 +829,7 @@ class Grammar(PGFile):
                                       imports=imports,
                                       file_path=file_path,
                                       grammar=self,
-                                      recognizers=recognizers)
+                                      **kwargs)
 
         # Determine start symbol. If name is provided search for it. If name is
         # not given use the first production LHS symbol as the start symbol.
@@ -1030,6 +1034,19 @@ class Grammar(PGFile):
                                 location=term.location,
                                 message='Terminal "{}" has no recognizer '
                                 'defined.'.format(term.fqn))
+
+        # checking for unused recognizers
+        for recognizer_name in self.recognizers.keys():
+            symbol = self.resolve_symbol_by_name(recognizer_name)
+            if symbol is None:
+                raise GrammarError(
+                    message='Recognizer given for unknown '
+                    'terminal "{}".'.format(recognizer_name)
+                )
+            if not isinstance(symbol, Terminal):
+                raise GrammarError(
+                    message='Recognizer given for non-terminal "{}".'
+                    .format(recognizer_name))
 
     def get_terminal(self, name):
         "Returns terminal with the given fully qualified name or name."

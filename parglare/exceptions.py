@@ -10,8 +10,9 @@ class LocationError(Exception):
 
 
 class GrammarError(LocationError):
-    def __init__(self, location, message):
-        location.position = location.start_position
+    def __init__(self, message, location=None):
+        if location is not None:
+            location.position = location.start_position
         super(GrammarError, self).__init__(location, message)
 
 
