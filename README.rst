@@ -105,8 +105,8 @@ Initial layout/content of this package was created with `Cookiecutter
 .. |build-status| image:: https://travis-ci.com/SupraSummus/parglare-slim.svg?branch=master
    :target: https://travis-ci.com/SupraSummus/parglare-slim
 
-.. |coverage| image:: https://coveralls.io/repos/github/igordejanovic/parglare/badge.svg?branch=master
-   :target: https://coveralls.io/github/igordejanovic/parglare?branch=master
+.. |coverage| image:: https://codecov.io/gh/SupraSummus/parglare-slim/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/SupraSummus/parglare-slim
 
 .. |docs| image:: https://img.shields.io/badge/docs-latest-green.svg
    :target: http://igordejanovic.net/parglare/latest/
