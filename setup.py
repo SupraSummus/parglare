@@ -56,7 +56,7 @@ setup(
     tests_require=[
         'memory_profiler',
         'ply',
-        'pytest',
+        'pytest==4.*',
     ],
     test_suite='tests',
     license="MIT license",
