@@ -1,26 +1,26 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-import pytest  # noqa
-from parglare import Parser, GLRParser, Grammar, ParseError
+import pytest
+
+from parglare import Parser, GLRParser, Grammar, GrammarError
 
 parsers = pytest.mark.parametrize("parser_class", [Parser, GLRParser])
 
 
 @parsers
 def test_layout_whitespaces(parser_class):
-    grammar = r"""
-    S: K EOF;
-    K: A | B;
-    A: 'a' A | 'a';
-    B: 'b' B | 'b';
-    LAYOUT: WS | EMPTY;
+    g, _ = Grammar.from_struct(
+        {
+            'K': [['K', 'a'], ['s']],
+            'LAYOUT': [['WS'], []],
+        },
+        {
+            'a': ('string', 'a'),
+            's': ('string', 's'),
+            'WS': ('regexp', r'\s+'),
+        },
+        'K',
+    )
 
-    terminals
-    WS: /\s+/;
-    """
-    g = Grammar.from_string(grammar)
-
-    in_str = """aaa a    aaaa
+    in_str = """saa a    aaaa
     aa    aa a aaa
 
     aaa
@@ -30,25 +30,27 @@ def test_layout_whitespaces(parser_class):
     result = parser.parse(in_str)
     assert result
 
+    parser.parse(' s')
+
 
 @parsers
 def test_layout_simple_comments(parser_class):
-    grammar = r"""
-    S: K EOF;
-    K: A | B;
-    A: 'a' A | 'a';
-    B: 'b' B | 'b';
+    g, _ = Grammar.from_struct(
+        {
+            'K': [['K', 'a'], ['s']],
+            'LAYOUT': [[], ['LAYOUT', 'LayoutItem']],
+            'LayoutItem': [['WS'], ['Comment']],
+        },
+        {
+            'a': ('string', 'a'),
+            's': ('string', 's'),
+            'WS': ('regexp', r'\s+'),
+            'Comment': ('regexp', r'\/\/.*'),
+        },
+        'K',
+    )
 
-    LAYOUT: LayoutItem | LAYOUT LayoutItem;
-    LayoutItem: WS | Comment | EMPTY;
-
-    terminals
-    WS: /\s+/;
-    Comment: /\/\/.*/;
-    """
-    g = Grammar.from_string(grammar)
-
-    in_str = """aaa a    aaaa
+    in_str = """saaa a    aaaa
     aa    aa a aaa // This is a comment
 
     aaa
@@ -57,45 +59,54 @@ def test_layout_simple_comments(parser_class):
     parser = parser_class(g)
     parser.parse(in_str)
 
+    parser.parse("""
+        // comment
+        sa
+    """)
+
 
 @parsers
 def test_layout_nested_comments(parser_class):
-    grammar = r"""
-    S: K EOF;
-    K: 'a' B | 'a' C;
-    B: 'b' | B 'b';
-    C: 'c' | C 'c';
-
-    LAYOUT: LayoutItem | LAYOUT LayoutItem;
-    LayoutItem: WS | Comment | EMPTY;
-    Comment: '/*' CorNCs '*/' | LineComment;
-    CorNCs: CorNC | CorNCs CorNC | EMPTY;
-    CorNC: Comment | NotComment | WS;
-
-    terminals
-    WS: /\s+/;
-    LineComment: /\/\/.*/;
-    NotComment: /((\*[^\/])|[^\s*\/]|\/[^\*])+/;
-    """
-    g = Grammar.from_string(grammar)
+    g, _ = Grammar.from_struct(
+        {
+            'K': [['K', 'a'], ['s']],
+            'LAYOUT': [[], ['LAYOUT', 'LayoutItem']],
+            'LayoutItem': [['WS'], ['Comment']],
+            'Comment': [['LineComment'], ['/*', 'BlockCommentChunks', '*/']],
+            'BlockCommentChunks': [[], ['BlockCommentChunks', 'BlockCommentChunk']],
+            'BlockCommentChunk': [['Comment'], ['NotComment'], ['WS']],
+        },
+        {
+            'a': ('string', 'a'),
+            's': ('string', 's'),
+            'WS': ('regexp', r'\s+'),
+            'LineComment': ('regexp', r'\/\/.*'),
+            'NotComment': ('regexp', r'((\*[^\/])|[^\s*\/]|\/[^\*])+'),
+            '/*': ('string', '/*'),
+            '*/': ('string', '*/'),
+        },
+        'K',
+    )
 
     in_str = """//Line comment at beginning
-    a  b b b   b // This is line comment
-    b b b b b b  /* This is block
+    s  a a a   a // This is line comment
+    a a a a a a  /* This is block
     comment */
 
-    bbbb  b b b b b
+    aaaa  a a a a a
     /* Another block comment
        // With nested line comment
        /* And nested block
     comment */
     */
 
-    bbbb b b b
+    aaaa a a a
     """
 
     parser = parser_class(g)
     parser.parse(in_str)
+
+    parser.parse('/* /* // \n */ comment body */ s')
 
 
 @parsers
@@ -103,22 +114,22 @@ def test_layout_context(parser_class):
     """
     Test that layout is passed in the action context.
     """
-    grammar = r"""
-    S: K EOF;
-    K: A | B;
-    A: 'a' A | 'a';
-    B: 'b' B | 'b';
+    g, _ = Grammar.from_struct(
+        {
+            'K': [['K', 'a'], ['s']],
+            'LAYOUT': [[], ['LAYOUT', 'LayoutItem']],
+            'LayoutItem': [['WS'], ['Comment']],
+        },
+        {
+            'a': ('string', 'a'),
+            's': ('string', 's'),
+            'WS': ('regexp', r'\s+'),
+            'Comment': ('regexp', r'\/\/.*'),
+        },
+        'K',
+    )
 
-    LAYOUT: LayoutItem | LAYOUT LayoutItem;
-    LayoutItem: WS | Comment | EMPTY;
-
-    terminals
-    WS: /\s+/;
-    Comment: /\/\/.*/;
-    """
-    g = Grammar.from_string(grammar)
-
-    in_str = """aaa a    aaaa
+    in_str = """ saa a    aaaa
     aa    aa a aaa // This is a comment
 
     aaa
@@ -150,22 +161,22 @@ def test_layout_actions(parser_class):
     Test that user provided actions for layout rules are called if given.
     """
 
-    grammar = r"""
-    S: K EOF;
-    K: A | B;
-    A: 'a' A | 'a';
-    B: 'b' B | 'b';
+    g, _ = Grammar.from_struct(
+        {
+            'K': [['K', 'a'], ['s']],
+            'LAYOUT': [[], ['LAYOUT', 'LayoutItem']],
+            'LayoutItem': [['WS'], ['Comment']],
+        },
+        {
+            'a': ('string', 'a'),
+            's': ('string', 's'),
+            'WS': ('regexp', r'\s+'),
+            'Comment': ('regexp', r'\/\/.*'),
+        },
+        'K',
+    )
 
-    LAYOUT: LayoutItem | LAYOUT LayoutItem;
-    LayoutItem: WS | Comment | EMPTY;
-
-    terminals
-    WS: /\s+/;
-    Comment: /\/\/.*/;
-    """
-    g = Grammar.from_string(grammar)
-
-    in_str = """aaa a    aaaa
+    in_str = """ saa a    aaaa
     aa    aa a aaa // This is a comment
 
     aaa
@@ -200,34 +211,18 @@ def test_layout_actions(parser_class):
     assert layout_called[0]
 
 
+@pytest.mark.skip
 def test_layout_terminal():
     """
-    Test that layout definition may be just a terminal rule.
-    """
-    grammar = r"""
-    S: "a" "b";
-    LAYOUT: "c";
+    Test terminal layout definition.
     """
 
-    g = Grammar.from_string(grammar)
-    parser = Parser(g)
-
-    with pytest.raises(ParseError):
-        parser.parse("a b")
-    parser.parse("cacbc")
-
-    grammar = r"""
-    S: "a" "b";
-    LAYOUT: DIGITS;
-
-    terminals
-    DIGITS: /\d*/;
-    """
-
-    g = Grammar.from_string(grammar)
-    parser = Parser(g)
-
-    with pytest.raises(ParseError):
-        parser.parse("a b")
-    result = parser.parse("4444a23b545")
-    assert result == ['a', 'b']
+    with pytest.raises(GrammarError):
+        Grammar.from_struct(
+            {},
+            {
+                's': ('string', 'a'),
+                'LAYOUT': ('string', 'b'),
+            },
+            's',
+        )

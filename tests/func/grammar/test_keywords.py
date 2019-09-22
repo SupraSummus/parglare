@@ -1,40 +1,43 @@
 """
 Test special KEYWORD rule.
 """
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 import pytest
 from parglare import Parser, Grammar, RegExRecognizer, StringRecognizer
 from parglare.exceptions import GrammarError, ParseError
 
 
+common_terminals = {
+    'ID': ('regexp', r'\w+'),
+    'INT': ('regexp', r'\d+'),
+    'for': ('string', 'for'),
+    '=': ('string', '='),
+    'to': ('string', 'to'),
+}
+
+
 def test_keyword_must_be_regex():
-    grammar = r"""
-    S: "for" name=ID "=" from=INT "to" to=INT;
-
-    terminals
-    KEYWORD: "id";
-    ID: /\w+/;
-    INT: /\d+/;
-    """
-
     with pytest.raises(GrammarError) as e:
-        Grammar.from_string(grammar)
+        Grammar.from_struct(
+            {'S': [['for', 'ID', '=', 'INT', 'to', 'INT']]},
+            {
+                'KEYWORD': ('string', 'id'),
+                **common_terminals,
+            },
+            'S',
+        )
 
     assert 'must have a regex recognizer defined' in str(e)
 
 
 def test_keyword_grammar_init():
-    grammar = r"""
-    S: "for" name=ID "=" from=INT "to" to=INT;
-
-    terminals
-    KEYWORD: /\w+/;
-    ID: /\w+/;
-    INT: /\d+/;
-    """
-
-    g = Grammar.from_string(grammar)
+    g, _ = Grammar.from_struct(
+        {'S': [['for', 'ID', '=', 'INT', 'to', 'INT']]},
+        {
+            'KEYWORD': ('regexp', r'\w+'),
+            **common_terminals,
+        },
+        'S',
+    )
 
     # 'for' term matches KEYWORD rule so it'll be replaced by
     # RegExRecognizer instance.
@@ -48,24 +51,15 @@ def test_keyword_grammar_init():
 
 
 def test_keyword_matches_on_word_boundary():
-    grammar = r"""
-    S: "for" name=ID "=" from=INT "to" to=INT EOF;
+    g, _ = Grammar.from_struct(
+        {'S': [['for', 'ID', '=', 'INT', 'to', 'INT']]},
+        {
+            'KEYWORD': ('regexp', r'\w+'),
+            **common_terminals,
+        },
+        'S',
+    )
 
-    terminals
-    ID: /\w+/;
-    INT: /\d+/;
-    """
-
-    g = Grammar.from_string(grammar)
-
-    parser = Parser(g)
-    # This will not raise an error
-    parser.parse('forid=10 to20')
-
-    # We add KEYWORD rule to the grammar to match ID-like keywords.
-    grammar += r"KEYWORD: /\w+/;"
-
-    g = Grammar.from_string(grammar)
     parser = Parser(g)
     with pytest.raises(ParseError) as e:
         # This *will* raise an error
@@ -87,15 +81,18 @@ def test_keyword_preferred_over_regexes():
     preferred over ordinary regex matches of the same length.
     """
 
-    grammar = r"""
-    S: "for"? name=ID? "=" from=INT "to" to=INT EOF;
-
-    terminals
-    ID: /\w+/;
-    INT: /\d+/;
-    KEYWORD: /\w+/;
-    """
-    g = Grammar.from_string(grammar)
+    g, _ = Grammar.from_struct(
+        {
+            'S': [['for?', 'ID?', '=', 'INT', 'to', 'INT']],
+            'for?': [[], ['for']],
+            'ID?': [[], ['ID']],
+        },
+        {
+            'KEYWORD': ('regexp', r'\w+'),
+            **common_terminals,
+        },
+        'S',
+    )
 
     parser = Parser(g)
 
@@ -104,3 +101,21 @@ def test_keyword_preferred_over_regexes():
     # StringRecognizer and keywords over RegExRecognizer for
     # the match of the same length (i.e. "more specific match")
     parser.parse("for = 10 to 100")
+
+
+@pytest.mark.skip
+def test_keword_rule():
+    """
+    Test terminal layout definition.
+    """
+
+    with pytest.raises(GrammarError):
+        Grammar.from_struct(
+            {
+                'KEYWORD': [['s']],
+            },
+            {
+                's': ('string', 'a'),
+            },
+            's',
+        )
