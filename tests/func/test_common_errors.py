@@ -16,7 +16,7 @@ def test_infinite_recursions():
     parser construction.
     """
 
-    grammar, _ = Grammar.from_struct(
+    grammar, start_symbol = Grammar.from_struct(
         {'Elements': [['Elements', 'Element']]},
         {'Element': ('string', 'a')},
         start='Elements',
@@ -25,8 +25,8 @@ def test_infinite_recursions():
     with pytest.raises(GrammarError) as e:
         Parser(grammar)
 
-        assert 'First set empty for grammar symbol "Elements"' in str(e)
-        assert 'infinite recursion' in str(e)
+    assert f'First set empty for grammar symbol "{start_symbol}"' in str(e)
+    assert 'infinite recursion' in str(e)
 
 
 def test_terminals_with_different_names():
@@ -51,9 +51,9 @@ def test_terminals_with_different_names():
             'S',
         )
 
-        assert 'B' in str(e)
-        assert 'd' in str(e)
-        assert 'match the same string' in str(e)
+    assert 'B' in str(e)
+    assert 'd' in str(e)
+    assert 'match the same string' in str(e)
 
 
 def todo_test_grammar_without_valid_inputs():

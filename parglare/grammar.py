@@ -1,19 +1,14 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals, print_function
 from os import path
-import sys
-import re
 import itertools
-from copy import copy
-from parglare.exceptions import GrammarError, ParserInitError
+import re
+
 from parglare.actions import pass_none
 from parglare.common import Location, load_python_module
+from parglare.exceptions import GrammarError, ParserInitError
 from parglare.termui import prints, s_emph, s_header, a_print, h_print
 
-if sys.version < '3':
-    text = unicode  # NOQA
-else:
-    text = str
+
+text = str
 
 # Associativity
 ASSOC_NONE = 0
@@ -1099,9 +1094,10 @@ class Grammar(PGFile):
         )
         """
         def make_terminal(name, t):
+            check_symbol_name(name)
             if not isinstance(t, (tuple, list)) or len(t) != 2:
-                raise ValueError(f"{name} terminal specification has to"
-                                 "be a list or a tuple of two elements")
+                raise GrammarError(f"{name} terminal specification has to"
+                                   f"be a list or a tuple of two elements")
 
             typ = t[0]
             if typ == 'external':
@@ -1113,11 +1109,11 @@ class Grammar(PGFile):
             elif typ == 'regexp':
                 recognizer_class = RegExRecognizer
             else:
-                raise ValueError(f"terminal {name}: unknown recognizer type {typ}")
+                raise GrammarError(f"terminal {name}: unknown recognizer type {typ}")
             return Terminal(recognizer=recognizer_class(val), name=name)
 
         if not isinstance(terminals_dict, dict):
-            raise ValueError("terminals_dict has to be a dict")
+            raise GrammarError("terminals_dict has to be a dict")
 
         terminals = {
             name: make_terminal(name, value)
@@ -1125,11 +1121,11 @@ class Grammar(PGFile):
         }
 
         if not isinstance(productions_dict, dict):
-            raise ValueError("productions_dict has to be a dict")
+            raise GrammarError("productions_dict has to be a dict")
 
         for name in productions_dict.keys():
             if name in terminals:
-                raise ValueError(f"there are both terminal and production named {name} - this is bad")
+                raise GrammarError(f"there are both terminal and production named {name} - this is bad")
 
         non_terminals = {
             name: NonTerminal(name)
@@ -1145,14 +1141,15 @@ class Grammar(PGFile):
 
         productions = []
         for name, alternatives in productions_dict.items():
+            check_symbol_name(name)
             for i, alternative in enumerate(alternatives):
                 lhs_symbol = non_terminals[name]
                 rhs_symbols = []
                 for symbol_name in alternative:
                     symbol = get_symbol(symbol_name)
                     if symbol is None:
-                        raise ValueError(f"production {name}, alternative {i}: "
-                                         f"reference to undefined symbol {symbol_name}")
+                        raise GrammarError(f"production {name}, alternative {i}: "
+                                           f"reference to undefined symbol {symbol_name}")
                     rhs_symbols.append(symbol)
                 rhs = ProductionRHS(rhs_symbols)
                 productions.append(Production(
@@ -1160,16 +1157,20 @@ class Grammar(PGFile):
                     rhs,
                 ))
 
-        if start not in non_terminals:
-            raise ValueError(f"Couldn't find start production {start}")
+        if get_symbol(start) is None:
+            raise GrammarError(f"Undefined start symbol {start}")
 
-        if '__start' in non_terminals or '__start' in terminals:
-            raise ValueError(f"'__start' symbol name is reserved and you can't use it - sorry")
+        meta_start_production_name = '__start'
 
-        start_non_terminal = NonTerminal('__start')
+        if meta_start_production_name in non_terminals or \
+           meta_start_production_name in terminals:
+            raise GrammarError(f"{meta_start_production_name} symbol name is reserved"
+                               f"and you can't use it - sorry")
+
+        start_non_terminal = NonTerminal(meta_start_production_name)
         productions.insert(0, Production(
             start_non_terminal,
-            ProductionRHS([non_terminals[start], EOF]),
+            ProductionRHS([get_symbol(start), EOF]),
         ))
 
         return Grammar(
@@ -1177,7 +1178,7 @@ class Grammar(PGFile):
             terminals=terminals.values(),
             start_symbol=start_non_terminal,
             **kwargs,
-        ), '__start'
+        ), meta_start_production_name
 
     def print_debug(self):
         a_print("*** GRAMMAR ***", new_line=True)
@@ -1289,22 +1290,14 @@ def make_multiplicity_name(symbol_name, multiplicity=None,
             "_{}".format(separator_name) if separator_name else "")
 
 
-def check_name(context, name):
+def check_symbol_name(name):
     """
     Used in actions to check for reserved names usage.
     """
 
     if name in RESERVED_SYMBOL_NAMES:
         raise GrammarError(
-            location=Location(context),
             message='Rule name "{}" is reserved.'.format(name))
     if '.' in name:
         raise GrammarError(
-            location=Location(context),
             message='Using dot in names is not allowed.'.format(name))
-
-
-class GrammarContext:
-    def __deepcopy__(self, memo):
-        # Use shallow copy for grammar context
-        return copy(self)
