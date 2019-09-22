@@ -97,10 +97,9 @@ collect_sep = [
 ]
 
 # Used for productions of the form - zero or more elements:
-# Elements: Elements Element | Element | EMPTY;
+# Elements: Elements Element | EMPTY;
 collect_optional = [
     collect_first,
-    pass_nochange,
     pass_empty
 ]
 
@@ -127,10 +126,9 @@ collect_right_sep = [
 ]
 
 # Used for productions of the form - zero or more elements:
-# Elements: Element Elements | Element | EMPTY;
+# Elements: Element Elements | EMPTY;
 collect_right_optional = [
     collect_right_first,
-    pass_nochange,
     pass_empty
 ]
 

@@ -1,8 +1,9 @@
-from __future__ import unicode_literals
-import pytest  # noqa
+import pytest
+
 from parglare import Grammar, Parser, NodeNonTerm
 from parglare.exceptions import ParserInitError
 from parglare import get_collector
+
 from ..grammar.expression_grammar_numbers import get_grammar
 
 
@@ -68,13 +69,11 @@ def test_action_list_assigned_to_terminal():
     """
     Test that list of actions can't be assigned to a Terminal.
     """
-    grammar = '''
-    S: A+;
-
-    terminals
-    A: 'a';
-    '''
-    g = Grammar.from_string(grammar)
+    grammar, _ = Grammar.from_struct(
+        {'S': [['S', 'A'], ['A']]},
+        {'A': ('string', 'a')},
+        'S',
+    )
 
     def some_action(_, nodes):
         return nodes[0]
@@ -86,7 +85,7 @@ def test_action_list_assigned_to_terminal():
 
     with pytest.raises(ParserInitError,
                        match=r'Cannot use a list of actions for terminal.*'):
-        Parser(g, actions=actions)
+        Parser(grammar, actions=actions)
 
 
 def test_invalid_number_of_actions():
@@ -94,12 +93,12 @@ def test_invalid_number_of_actions():
     Test that parser error is raised if rule is given list of actions
     where there is less/more actions than rule productions.
     """
-    grammar = '''
-    S: A+ | B+;
-    A: 'a';
-    B: 'b';
-    '''
-    g = Grammar.from_string(grammar)
+    grammar, _ = Grammar.from_struct(
+        {'S': [['A'], ['B']]},
+        {'A': ('string', 'a'),
+         'B': ('string', 'B')},
+        'S',
+    )
 
     def some_action(_, nodes):
         return nodes[0]
@@ -107,21 +106,21 @@ def test_invalid_number_of_actions():
     actions = {
         'S': [some_action, some_action]
     }
-    Parser(g, actions=actions)
+    Parser(grammar, actions=actions)
 
     actions = {
         'S': [some_action]
     }
     with pytest.raises(ParserInitError,
                        match=r'Length of list of actions must match.*'):
-        Parser(g, actions=actions)
+        Parser(grammar, actions=actions)
 
     actions = {
         'S': [some_action, some_action, some_action]
     }
     with pytest.raises(ParserInitError,
                        match=r'Length of list of actions must match.*'):
-        Parser(g, actions=actions)
+        Parser(grammar, actions=actions)
 
 
 def test_action_decorator():

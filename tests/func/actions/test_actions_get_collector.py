@@ -1,8 +1,18 @@
-from __future__ import unicode_literals
-import os
 from parglare import get_collector, Parser, Grammar
 
-THIS_FOLDER = os.path.abspath(os.path.dirname(__file__))
+
+grammar, _ = Grammar.from_struct(
+    {
+        'Model': [['INT+', 'Rule1', 'INT']],
+        'Rule1': [['STRING']],
+        'INT+': [['INT+', 'INT'], ['INT']],
+    },
+    {
+        'INT': ('regexp', r'\d+'),
+        'STRING': ('regexp', '.*'),
+    },
+    'Model',
+)
 
 
 def test_action_explicit_get_collector():
@@ -21,7 +31,6 @@ def test_action_explicit_get_collector():
     def STRING(context, value):
         return "#{}#".format(value)
 
-    grammar = Grammar.from_file(os.path.join(THIS_FOLDER, 'grammar.pg'))
     Parser(grammar, actions=action.all)
 
 
@@ -37,7 +46,6 @@ def test_action_explicit_get_collector_missing_action():
     def INT(context, value):
         return int(value)
 
-    grammar = Grammar.from_file(os.path.join(THIS_FOLDER, 'grammar.pg'))
     Parser(grammar, actions=action.all)
 
 
@@ -61,5 +69,4 @@ def test_actions_explicit_get_collector_action_for_unexisting_terminal():
     def STRING2(context, value):
         return "#{}#".format(value)
 
-    grammar = Grammar.from_file(os.path.join(THIS_FOLDER, 'grammar.pg'))
     Parser(grammar, actions=action.all)
