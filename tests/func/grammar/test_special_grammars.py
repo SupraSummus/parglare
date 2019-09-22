@@ -130,7 +130,8 @@ def test_cyclic_grammar_1():
     assert len(results) == 1
 
 
-def todo_test_cyclic_grammar_2():
+@pytest.mark.skip
+def test_cyclic_grammar_2():
     """
     From the paper: "GLR Parsing for e-Grammers" by Rahman Nozohoor-Farshi
 
@@ -144,8 +145,6 @@ def todo_test_cyclic_grammar_2():
     with pytest.raises(SRConflicts):
         Parser(g, prefer_shifts=False)
 
-    3/0
-
     p = GLRParser(g, debug=True)
     results = p.parse('xx')
     # This grammar has infinite ambiguity but by minimizing empty reductions
@@ -154,19 +153,20 @@ def todo_test_cyclic_grammar_2():
 
 
 def test_cyclic_grammar_3():
-    grammar = """
-    start: S EOF;
-    S: S A | A;
-    A: "a" | EMPTY;
-    """
+    g, _ = Grammar.from_struct(
+        {
+            'S': [['S', 'A'], ['A']],
+            'A': [['a'], []],
+        },
+        {'a': ('string', 'a')},
+        'S',
+    )
 
-    g = Grammar.from_string(grammar)
-
-    Parser(g)
+    p = Parser(g)
+    p.parse('aa')
 
     p = GLRParser(g, debug=True)
     results = p.parse('aa')
-
     assert len(results) == 1
 
 
@@ -176,12 +176,11 @@ def test_highly_ambiguous_grammar():
     thus can't be parsed by a deterministic LR parsing.
     Shift/Reduce can be resolved by prefer_shifts strategy.
     """
-    grammar = """
-    start: S EOF;
-    S: "b" | S S | S S S;
-    """
-
-    g = Grammar.from_string(grammar)
+    g, _ = Grammar.from_struct(
+        {'S': [['b'], ['S', 'S'], ['S', 'S', 'S']]},
+        {'b': ('string', 'b')},
+        'S',
+    )
 
     with pytest.raises(SRConflicts):
         Parser(g, prefer_shifts=False)
@@ -212,13 +211,17 @@ def test_indirect_left_recursive():
     production.
 
     """
-
-    grammar = """
-    S: B "a";
-    B: "b" B | EMPTY;
-    """
-
-    g = Grammar.from_string(grammar)
+    g, _ = Grammar.from_struct(
+        {
+            'S': [['B', 'a']],
+            'B': [['b', 'B'], []],
+        },
+        {
+            'b': ('string', 'b'),
+            'a': ('string', 'a'),
+        },
+        'S',
+    )
 
     p = Parser(g)
     p.parse("bbbbbbbbbbbba")
@@ -244,12 +247,17 @@ def test_reduce_enough_empty():
     phD thesis, Universiteit van Amsterdam, 1992.
 
     """
-    grammar = """
-    S: A S "b";
-    S: "x";
-    A: EMPTY;
-    """
-    g = Grammar.from_string(grammar)
+    g, _ = Grammar.from_struct(
+        {
+            'S': [['A', 'S', 'b'], ['x']],
+            'A': [[]],
+        },
+        {
+            'b': ('string', 'b'),
+            'x': ('string', 'x'),
+        },
+        'S',
+    )
 
     p = GLRParser(g, debug=True)
     results = p.parse("xbbb")
