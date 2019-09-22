@@ -1,7 +1,0 @@
-import 'second.pg';
-import 'submodule/third.pg' as t;
-
-FirstRule: INT+ second.SecondRule t.ThirdRule;
-
-terminals
-INT: /\d+/;

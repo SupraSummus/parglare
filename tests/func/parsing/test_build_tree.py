@@ -1,15 +1,17 @@
-import pytest  # noqa
 from parglare import Grammar, Parser
 
 
 def test_call_actions_during_tree_build():
-    grammar = """
-    Program: "begin" MoveCommand* "end";
-    MoveCommand: "move" Direction;
-    Direction: "up" | "down" | "left" | "right";
-    """
-
-    g = Grammar.from_string(grammar)
+    g, _ = Grammar.from_struct(
+        {
+            'Program': [['begin', 'MoveCommand*', 'end']],
+            'MoveCommand*': [['MoveCommand*', 'MoveCommand'], []],
+            'MoveCommand': [['move', 'Direction']],
+            'Direction': [['up'], ['down'], ['left'], ['right']],
+        },
+        {s: ('string', s) for s in ['begin', 'end', 'move', 'up', 'down', 'left', 'right']},
+        'Program',
+    )
 
     code = """
     begin

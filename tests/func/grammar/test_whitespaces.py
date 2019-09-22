@@ -37,11 +37,14 @@ def test_whitespace_not_used_if_layout():
     """
     If LAYOUT rule is used, ws definition is ignored.
     """
-    grammar = """
-    S: 'a' 'b';
-    LAYOUT: 'k' | EMPTY;
-    """
-    g = Grammar.from_string(grammar)
+    g, _ = Grammar.from_struct(
+        {
+            'S': [['a', 'b']],
+            'LAYOUT': [['k'], []],
+        },
+        {s: ('string', s) for s in ['a', 'b', 'k']},
+        'S',
+    )
     parser = Parser(g)
     with pytest.raises(ParseError):
         parser.parse('a b')

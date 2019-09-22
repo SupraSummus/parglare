@@ -357,7 +357,11 @@ class ProductionRHS(list):
         return super(ProductionRHS, self).__len__() - self.count(EMPTY)
 
     def __str__(self):
-        return " ".join([str(x) for x in self])
+        if self:
+            return " ".join([str(x) for x in self])
+        else:
+            # empty list
+            return "<EMPTY>"
 
     def __repr__(self):
         return "<ProductionRHS([{}])>".format(
