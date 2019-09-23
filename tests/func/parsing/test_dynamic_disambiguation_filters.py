@@ -1,9 +1,11 @@
-import pytest  # noqa
+import pytest
+
 from parglare import GLRParser, Grammar, Parser, SHIFT, REDUCE
+from parglare.actions import pass_single
 from parglare.exceptions import SRConflicts
 
 
-grammar, _ = Grammar.from_struct(
+grammar, start_symbol = Grammar.from_struct(
     {
         'E': [
             ['E', 'op_sum', 'E'],  # dynamic
@@ -18,6 +20,10 @@ grammar, _ = Grammar.from_struct(
     },
     'E',
 )
+grammar.get_symbol('E').productions[0].dynamic = True
+grammar.get_symbol('E').productions[1].dynamic = True
+grammar.get_symbol('op_sum').dynamic = True
+grammar.get_symbol('op_mul').dynamic = True
 
 instr1 = '1 + 2 * 5 + 3'
 instr2 = '1 * 2 + 5 * 3'
@@ -25,7 +31,8 @@ instr2 = '1 * 2 + 5 * 3'
 actions = {
     'E': [lambda _, nodes: nodes[0] + nodes[2],
           lambda _, nodes: nodes[0] * nodes[2],
-          lambda _, nodes: float(nodes[0])]
+          lambda _, nodes: float(nodes[0])],
+    start_symbol: pass_single,
 }
 
 

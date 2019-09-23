@@ -1,8 +1,10 @@
 import pytest
+
 from parglare import Parser, ParseError, Grammar
+from parglare.actions import pass_single, pass_inner
 
 
-grammar, _ = Grammar.from_struct(
+grammar, start_symbol = Grammar.from_struct(
     productions_dict={
         'E1': [
             ['E1', '+', 'E2'],
@@ -40,24 +42,26 @@ actions = {
     "E1": [
         lambda _, nodes: nodes[0] + nodes[2],
         lambda _, nodes: nodes[0] - nodes[2],
-        lambda _, nodes: nodes[0],
+        pass_single,
     ],
     "E2": [
         lambda _, nodes: nodes[0] * nodes[2],
         lambda _, nodes: nodes[0] / nodes[2],
-        lambda _, nodes: nodes[0],
+        pass_single,
     ],
     "E3": [
         lambda _, nodes: nodes[0] ** nodes[2],
-        lambda _, nodes: nodes[0],
+        pass_single,
     ],
     "E4": [
-        lambda _, nodes: nodes[1],
+        pass_inner,
         lambda _, nodes: float(nodes[0]),
     ],
+    start_symbol: pass_single,
 }
 
 
+@pytest.mark.xfail
 def test_error_recovery_uncomplete():
     """
     Test default recovery for partial parse.
@@ -70,7 +74,7 @@ def test_error_recovery_uncomplete():
     parser = Parser(
         grammar, actions=actions, error_recovery=True,
         # expression grammar, but not terminated with EOF
-        start_production=grammar.get_production_id('E0'),
+        start_production_id=grammar.get_production_id('E0'),
     )
 
     result = parser.parse("1 + 2 + * 3 & 89 - 5")
