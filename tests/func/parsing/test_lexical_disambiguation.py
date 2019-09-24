@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Test lexical disambiguation strategy.
 
 Longest-match strategy is first used. If more tokens has the same length
@@ -7,10 +6,10 @@ If ambiguity is still unresolved priority is checked as the last resort.
 At the end disambiguation error is reported.
 
 """
-from __future__ import unicode_literals
-import pytest  # noqa
+import pytest
 import difflib
 import re
+
 from parglare import Parser, Grammar, Token, ParseError, DisambiguationError
 
 
@@ -24,9 +23,9 @@ def act_called(which_called):
 
 
 actions = {
-    "First": act_called(0),
-    "Second": act_called(1),
-    "Third": act_called(2),
+    "a": act_called(0),
+    "b": act_called(1),
+    "c": act_called(2),
 }
 
 
@@ -36,124 +35,72 @@ def cf():
     called = [False, False, False]
 
 
-def test_priority(cf):
-
-    grammar = r"""
-    S: M EOF;
-    M: First | Second  | Third "5";
-
-    terminals
-    First: /\d+\.75/;
-    Second: '14.75';
-    Third: /\d+\.\d/ {15};
-    """
-
-    g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions, debug=False)
-
-    # Priority is used first
-    parser.parse('14.75')
-    assert called == [False, False, True]
-
-
-def test_priority_lower(cf):
-    """
-    Test that lower priority terminals have lower precendence.
-    """
-
-    grammar = r"""
-    S: M EOF;
-    M: First | Second  | Third;
-
-    terminals
-    First: /\d+\.75/ {7};
-    Second: /\d+\.\d+/;
-    Third: /foo/;
-    """
-
-    g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions, debug=False)
-
-    # Second should match as it has higher priority over First
-    parser.parse('14.75')
-    assert called == [False, True, False]
-
-
 def test_most_specific(cf):
+    g, _ = Grammar.from_struct(
+        {'s': [['a'], ['b']]},
+        {
+            'a': ('string', '14'),
+            'b': ('regexp', r'\d+'),
+        },
+        's',
+    )
+    parser = Parser(g, actions=actions)
 
-    grammar = r"""
-    S: First | Second | Third;
-
-    terminals
-    First: /\d+\.\d+/;
-    Second: '14';
-    Third: /\d+/;
-    """
-
-    g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions, debug=True)
-
-    # String match in rule Second is more specific than Third regexp rule.
+    # String match in string rule is more specific than regexp rule.
     parser.parse('14')
-    assert called == [False, True, False]
+    assert called[0]
+    assert not called[1]
 
 
 def test_most_specific_longest_match(cf):
+    g, _ = Grammar.from_struct(
+        {'s': [['a', '7'], ['b'], ['c']]},
+        {
+            'a': ('string', '14'),
+            'b': ('regexp', r'\d+'),
+            'c': ('string', '147'),
+            '7': ('string', '7'),
+        },
+        's',
+    )
+    parser = Parser(g, actions=actions)
 
-    grammar = r"""
-    S: First | Second | Third;
-
-    terminals
-    First: '147';
-    Second: '14';
-    Third: /\d+/;
-    """
-
-    g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions, debug=True)
-
-    # All three rules could match. First is tried first because it is
+    # All three rules could match. 'c' is tried first because it is
     # more specific (str match) and longest. It succeeds so other two
     # are not tried at all.
     parser.parse('147')
-    assert called == [True, False, False]
+    assert called == [False, False, True]
 
 
 def test_longest_match(cf):
-
-    grammar = r"""
-    S: First | Second | Third;
-
-    terminals
-    First: /\d+\.\d+/;
-    Second: '13';
-    Third: /\d+/;
-    """
-
-    g = Grammar.from_string(grammar)
+    g, _ = Grammar.from_struct(
+        {'s': [['a', 'dot', 'a'], ['b']]},
+        {
+            'a': ('regexp', r'\d+'),
+            'b': ('regexp', r'\d+.\d+'),
+            'dot': ('string', '.'),
+        },
+        's',
+    )
     parser = Parser(g, actions=actions)
 
     # If all matches are regexes of the same priority use longest match
     # disambiguation.
     parser.parse('14.17')
-    assert called == [True, False, False]
+    assert called == [False, True, False]
 
 
 def test_failed_disambiguation(cf):
-
-    grammar = r"""
-    S: First | Second | Third;
-
-    terminals
-    First: /\d+\.\d+/ {15};
-    Second: '14.7';
-    Third: /\d+\.75/ {15};
-    """
-
-    g = Grammar.from_string(grammar)
+    g, _ = Grammar.from_struct(
+        {'s': [['a'], ['b']]},
+        {
+            'a': ('regexp', r'\d+.\d+'),
+            'b': ('regexp', r'\d+.75'),
+        },
+        's',
+    )
     parser = Parser(g, actions=actions, debug=True)
 
-    # All rules will match but First and Third have higher priority.
     # Both are regexes so longest match will be used.
     # Both have the same length.
 
@@ -161,77 +108,8 @@ def test_failed_disambiguation(cf):
         parser.parse('14.75')
 
     assert 'disambiguate' in str(e)
-    assert 'First' in str(e)
-    assert 'Second' not in str(e)
-    assert 'Third' in str(e)
-
-
-def test_longest_match_prefer(cf):
-
-    grammar = r"""
-    S: First | Second | Third;
-
-    terminals
-    First: /\d+\.\d+/ {15};
-    Second: '14.7';
-    Third: /\d+\.75/ {15, prefer};
-    """
-
-    g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions)
-
-    # All rules will match but First and Third have higher priority.
-    # Both are regexes so longest match will be used.
-    # Both have the same length but the third rule is preferred.
-
-    parser.parse('14.75')
-    assert called == [False, False, True]
-
-
-def test_nofinish(cf):
-    """
-    Test that `nofinish` terminal filter will disable `finish` short-circuit
-    optimization.
-    """
-    global called
-
-    # In rare circumstances `finish` scanning optimization may lead to a
-    # problem. This grammar demonstrates the problem.
-    grammar = r"""
-    S: First | Second | Third;
-
-    terminals
-    First: /\d+\.\d+/;
-    Second: '*';
-    Third: /[A-Za-z0-9\*\-]+/;
-    """
-
-    # In the previous grammar trying to parse input "*ThirdShouldMatchThis"
-    # will parse only "*" at the beginning as Second will be short-circed by
-    # implicit "prefer string match" rule and `finish` flag on Second terminal
-    # will be set.
-    g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions)
-    parser.parse('*ThirdShouldMatchThis')
-    assert called == [False, True, False]
-
-    # In this case we would actually like for Third to match as it is a longer
-    # match. To do this we should set `nofinish` flag on Second terminal which
-    # will make parglare doesn't use short-circuit and try other possibilities
-    # also.
-    grammar = r"""
-    S: First | Second | Third;
-
-    terminals
-    First: /\d+\.\d+/;
-    Second: '*' {nofinish};
-    Third: /[A-Za-z0-9\*\-]+/;
-    """
-    called = [False, False, False]
-    g = Grammar.from_string(grammar)
-    parser = Parser(g, actions=actions)
-    parser.parse('*ThirdShouldMatchThis')
-    assert called == [False, False, True]
+    assert 'a(' in str(e)
+    assert 'b(' in str(e)
 
 
 def test_dynamic_lexical_disambiguation():
@@ -239,18 +117,18 @@ def test_dynamic_lexical_disambiguation():
     Dynamic disambiguation enables us to choose right token from the
     tokens posible to appear at given place in the input.
     """
-    grammar = r"""
-    S: Element+ EOF;
-    Element: Bar | Baz | Number;
-
-    terminals
-    Bar: /Bar. \d+/;
-    Baz: /Baz. \d+/;
-    Number: /\d+/;
-    """
-
-    g = Grammar.from_string(grammar)
-    grammar = [g]
+    g, _ = Grammar.from_struct(
+        {
+            'Element+': [['Element'], ['Element+', 'Element']],
+            'Element': [['Bar'], ['Baz'], ['Number']],
+        },
+        {
+            'Bar': ('regexp', r'Bar. \d+'),
+            'Baz': ('regexp', r'Baz. \d+'),
+            'Number': ('regexp', r'\d+'),
+        },
+        'Element+',
+    )
 
     def custom_token_recognition(context, get_tokens):
         """
@@ -270,8 +148,8 @@ def test_dynamic_lexical_disambiguation():
                 lambda x: difflib.SequenceMatcher(None, 'baz.', x.lower())
             ]
             symbols = [
-                grammar[0].get_terminal('Bar'),
-                grammar[0].get_terminal('Baz'),
+                g.get_terminal('Bar'),
+                g.get_terminal('Baz'),
             ]
             # Try to do fuzzy match at the position
             elem = context.input_str[context.position:context.position+4]
