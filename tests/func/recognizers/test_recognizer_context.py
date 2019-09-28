@@ -6,15 +6,6 @@ import re
 
 
 def test_recognizer_context():
-    grammar = """
-    program: expression+[semicolon];
-    expression: term+;
-
-    terminals
-    semicolon: ";";
-    term:;
-    """
-
     term_re = re.compile(r"[a-zA-Z_]+")
 
     def term(context, input, pos):
@@ -23,6 +14,17 @@ def test_recognizer_context():
             return None
         return input[pos:match.end()]
 
-    g = Grammar.from_string(grammar, recognizers={'term': term})
+    g, _ = Grammar.from_struct(
+        {
+            'program': [['program', ';', 'expression'], ['expression']],
+            'expression': [['expression', 'term'], ['term']],
+        },
+        {
+            'term': ('external', None),
+            ';': ('string', ';'),
+        },
+        'program',
+        recognizers={'term': term},
+    )
     parser = Parser(g)
     assert parser.parse("a bb cc; d ee f; g hh i")

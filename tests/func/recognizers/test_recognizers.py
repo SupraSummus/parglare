@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-import pytest  # noqa
+import pytest
+
 from parglare import Grammar, Parser, ParseError, ParserInitError, \
     GrammarError, DisambiguationError
 from parglare.actions import pass_single, pass_nochange, collect

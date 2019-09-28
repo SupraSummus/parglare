@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-import pytest  # noqa
+import pytest
 import os
+
 from parglare import Grammar, Parser, GLRParser, ParseError
 from ..grammar.expression_grammar import get_grammar
 
@@ -46,16 +45,19 @@ def test_premature_end(parser_class):
 
 
 def test_ambiguous_glr():
-    grammar = r"""
-    S: E EOF;
-    E: E '+' E
-     | E '*' E
-     | number;
-
-    terminals
-    number: /\d+(\.\d+)?/;
-    """
-    g = Grammar.from_string(grammar)
+    g, _ = Grammar.from_struct(
+        {'E': [
+            ['E', '+', 'E'],
+            ['E', '*', 'E'],
+            ['number'],
+        ]},
+        {
+            '+': ('string', '+'),
+            '*': ('string', '*'),
+            'number': ('regexp', r'\d+(\.\d+)?'),
+        },
+        'E',
+    )
     parser = GLRParser(g)
 
     with pytest.raises(ParseError) as e:
