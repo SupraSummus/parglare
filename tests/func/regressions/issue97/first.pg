@@ -1,4 +1,0 @@
-import 'second.pg' as s;
-
-S: A s.E*;
-A: s.E+;

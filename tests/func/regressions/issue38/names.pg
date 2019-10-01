@@ -1,5 +1,0 @@
-LINE: FIO|SYMBOL;
-
-terminals
-FIO: /МИША|САША/ {15};
-SYMBOL: /\w+/;

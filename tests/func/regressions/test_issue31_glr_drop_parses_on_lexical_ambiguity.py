@@ -2,25 +2,26 @@ from parglare import Grammar, GLRParser
 
 
 def test_issue31_glr_drop_parses_on_lexical_ambiguity():
-    grammar = """
-    model: element+ EOF;
-    element: title
-           | table_with_note
-           | table_with_title;
-    table_with_title: table_title table_with_note;
-    table_with_note: table note*;
-
-    terminals
-    title: /title/;   // <-- This is lexically ambiguous with the next.
-    table_title: /title/;
-    table: "table";
-    note: "note";
-    """
-
     # this input should yield 4 parse trees.
     input = "title table title table"
 
-    g = Grammar.from_string(grammar)
+    g, _ = Grammar.from_struct(
+        {
+            'element+': [['element+', 'element'], ['element']],
+            'element': [['title'], ['table_with_title'], ['table_with_title']],
+            'table_with_title': [['table_title', 'table_with_note']],
+            'table_with_note': [['table', 'note*']],
+            'note*': [[], ['note*', 'note']],
+        },
+        {
+            'title': ('regexp', 'title'),
+            'table_title': ('regexp', 'title'),
+            'table': ('string', 'table'),
+            'note': ('string', 'note'),
+        },
+        'element+',
+    )
+
     parser = GLRParser(g, debug=True, debug_colors=True)
     results = parser.parse(input)
 

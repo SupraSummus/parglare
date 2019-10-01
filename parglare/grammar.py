@@ -1129,7 +1129,7 @@ class Grammar(PGFile):
 
         for name in productions_dict.keys():
             if name in terminals:
-                raise GrammarError(f"there are both terminal and production named {name} - this is bad")
+                raise GrammarError(f"production {name} is already defined (as a terminal)")
 
         non_terminals = {
             name: NonTerminal(name)
